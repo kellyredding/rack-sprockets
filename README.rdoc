@@ -59,7 +59,7 @@ These are similar to sprockets options and, where applicable, map directly to sp
 
 * :*load_path* [["app/javascripts/", "vendor/javascripts/"]] - an ordered array of directory names to search for dependencies in.  maps to the `:load_path` Sprockets option.
   
-* :*source_files* [["app/javascripts/app.js"]] - an ordered array of source files to build the resulting concatenation.  maps to the `:source_files` Sprockets option.
+* :*source* ["app/javascripts"] - the path where Sprockets source files are located.  Notice there no corresponding option for the `:source_files` Sprockets option.  It is assumed that any requested resource found in `:source` be treated as a Sprockets source file.
   
 * :*expand_paths* [true] - specifies whether or not to expand filenames according to shell glob rules.  maps to the `:expand_paths` Sprockets option.
 
