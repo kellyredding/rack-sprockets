@@ -24,7 +24,7 @@ and use as follows:
     end
 
     use Rack::Sprockets,
-      :source    => 'app/less',
+      :load_path => 'app/scripts',
       :hosted_at => '/'
       # additional options ...
 
@@ -48,38 +48,42 @@ You should now see `Rack::Sprockets` listed in the middleware pipeline:
     rake middleware
 
 == Available Options
-key: name [default]: description
+These are similar to sprockets options and, where applicable, map directly to sprockets.
 
-* *root* ["."]:
-  the app root. the reference point for the source and public options.
+* `:root` ['.']
+  the app root. the reference point for the source and public options.  maps to the `:root` Sprockets option.
 
-* *source* ['app/javascripts']:
-  the path (relative to the root) where LESS source files are located
+* `:public` ['public']
+  the path (relative to the root) static files are located.  maps to the `:asset_root` Sprockets option.
 
-* *public* ['public']:
-  the path (relative to the root) static files are located
+* `:load_path` [["app/javascripts/", "vendor/javascripts/"]]
+  an ordered array of directory names to search for dependencies in.  maps to the `:load_path` Sprockets option.
+  
+* `:source_files` [["app/javascripts/app.js"]]
+  an ordered array of source files to build the resulting concatenation.  maps to the `:source_files` Sprockets option.
+  
+* `:expand_paths` [true]
+  specifies whether or not to expand filenames in the `load_path` and `source_files` arrays according to shell glob rules.  maps to the `:expand_paths` Sprockets option.
 
-* *hosted_at* ['/javascripts']:
-  the public HTTP path for hosted stylesheets
+* `:hosted_at` ['/javascripts']:
+  the public HTTP path for hosted javascripts
 
 == Available Configurations
-key: name [default]: description
+* `.cache` [false]:
+  whether or not to cache the concatenation output to a corresponding static file
 
-* *cache* [false]:
-  whether to cache the compilation output to a corresponding static file
-
-* *compress* [false]:
-  whether to apply compression to output - uses YUI Compressor if available or will remove extraneous whitespace if not.
+* `.compress` [false]:
+  whether or not to apply compression to the concatenation output - uses YUI Compressor if available or will remove extraneous whitespace if not.
 
 == Links
 
-*GitHub:*
+*GitHub*
 http://github.com/kelredd/rack-sprockets
 
-*Sprockets:*
+*Sprockets*
 http://getsprockets.org/
 
-*Yui Compression:*
+*Yui Compression*
 http://github.com/sstephenson/ruby-yui-compressor
 http://developer.yahoo.com/yui/compressor/
 
