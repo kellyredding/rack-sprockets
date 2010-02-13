@@ -53,7 +53,7 @@ You should now see `Rack::Sprockets` listed in the middleware pipeline:
 == Available Options
 These are similar to sprockets options and, where applicable, map directly to sprockets.
 
-* *:root* ['.'] - the app root. the reference point for the source and public options.  maps to the *:root* Sprockets option.
+* `:*root*` ['.'] - the app root. the reference point for the source and public options.  maps to the `:root` Sprockets option.
 
 * *:public* ['public'] - the path (relative to the root) static files are located.  maps to the *:asset_root* Sprockets option.
 
