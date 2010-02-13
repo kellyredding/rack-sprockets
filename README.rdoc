@@ -59,17 +59,17 @@ These are similar to sprockets options and, where applicable, map directly to a 
 * :*public* ['public']
   - The path where static files are located.  Maps to the `:asset_root` Sprockets option.
 
-* :*load_path* [["app/javascripts/", "vendor/javascripts/"]]
-  - An ordered array of directory names to search for dependencies in.  Maps to the `:load_path` Sprockets option.
-  
 * :*source* ["app/javascripts"]
   - The path where Sprockets source files are located.  Notice this does not map to the `:source_files` Sprockets option.  It is assumed that any requested resource found in `:source` be treated as a Sprockets source file.
   
-* :*expand_paths* [true]
-  - Specifies whether or not to expand filenames according to shell glob rules.  Maps to the `:expand_paths` Sprockets option.
-
 * :*hosted_at* ["/javascripts"]
   - The public hosted HTTP path for static javascripts files.
+
+* :*load_path* [["app/javascripts/", "vendor/javascripts/"]]
+  - An ordered array of directory names to search for dependencies in.  Maps to the `:load_path` Sprockets option.
+  
+* :*expand_paths* [true]
+  - Whether or not to expand filenames according to shell glob rules.  Maps to the `:expand_paths` Sprockets option.
 
 == Available Configurations
 * .*cache* [false]
