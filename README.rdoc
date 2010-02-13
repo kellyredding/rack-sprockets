@@ -7,6 +7,9 @@ Sprockets javascript preprocessing for Rack apps.
 == Installation
 
     gem install rack-sprockets
+    
+    # optional, for compression
+    gem install yui-compressor
 
 == Basic Usage
 
@@ -50,30 +53,22 @@ You should now see `Rack::Sprockets` listed in the middleware pipeline:
 == Available Options
 These are similar to sprockets options and, where applicable, map directly to sprockets.
 
-* *:root* ['.']
-  the app root. the reference point for the source and public options.  maps to the *:root* Sprockets option.
+* *:root* ['.'] - the app root. the reference point for the source and public options.  maps to the *:root* Sprockets option.
 
-* *:public* ['public']
-  the path (relative to the root) static files are located.  maps to the *:asset_root* Sprockets option.
+* *:public* ['public'] - the path (relative to the root) static files are located.  maps to the *:asset_root* Sprockets option.
 
-* *:load_path* [["app/javascripts/", "vendor/javascripts/"]]
-  an ordered array of directory names to search for dependencies in.  maps to the *:load_path* Sprockets option.
+* *:load_path* [["app/javascripts/", "vendor/javascripts/"]] - an ordered array of directory names to search for dependencies in.  maps to the *:load_path* Sprockets option.
   
-* *:source_files* [["app/javascripts/app.js"]]
-  an ordered array of source files to build the resulting concatenation.  maps to the *:source_files* Sprockets option.
+* *:source_files* [["app/javascripts/app.js"]] - an ordered array of source files to build the resulting concatenation.  maps to the *:source_files* Sprockets option.
   
-* *:expand_paths* [true]
-  specifies whether or not to expand filenames in the *:load_path* and *:source_files* arrays according to shell glob rules.  maps to the *:expand_paths* Sprockets option.
+* *:expand_paths* [true] - specifies whether or not to expand filenames in the *:load_path* and *:source_files* arrays according to shell glob rules.  maps to the *:expand_paths* Sprockets option.
 
-* *:hosted_at* ['/javascripts']:
-  the public HTTP path for hosted javascripts
+* *:hosted_at* ['/javascripts'] - the public HTTP path for hosted javascripts
 
 == Available Configurations
-* *.cache* [false]:
-  whether or not to cache the concatenation output to a corresponding static file
+* *.cache* [false] - whether or not to cache the concatenation output to a corresponding static file
 
-* *.compress* [false]:
-  whether or not to apply compression to the concatenation output - uses YUI Compressor if available or will remove extraneous whitespace if not.
+* *.compress* [false] - whether or not to apply compression to the concatenation output - uses YUI Compressor if available or will remove extraneous whitespace if not.
 
 == Links
 
@@ -81,11 +76,11 @@ These are similar to sprockets options and, where applicable, map directly to sp
 http://github.com/kelredd/rack-sprockets
 
 *Sprockets*
-http://getsprockets.org/
+http://getsprockets.org
 
-*Yui Compression*
+*Yui/Compressor*
 http://github.com/sstephenson/ruby-yui-compressor
-http://developer.yahoo.com/yui/compressor/
+http://developer.yahoo.com/yui/compressor
 
 == License
 
