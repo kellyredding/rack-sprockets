@@ -1,0 +1,109 @@
+= Rack::Sprockets
+
+== Description
+
+Sprockets javascript preprocessing for Rack apps.
+
+== Installation
+
+    gem install rack-sprockets
+
+== Basic Usage
+
+Rack::Sprockets is implemented as a piece of Rack middleware and can be used with
+any Rack-based application. If your application includes a rackup (`.ru`) file
+or uses Rack::Builder to construct the application pipeline, simply require
+and use as follows:
+
+    require 'rack/sprockets'
+
+    # optional - use as necessary
+    Rack::Sprockets.configure do |config|
+      config.compress = true
+      # other configs ...
+    end
+
+    use Rack::Sprockets,
+      :source    => 'app/less',
+      :hosted_at => '/'
+      # additional options ...
+
+    run app
+
+== Using with Rails
+
+Add this to your `config/environment.rb`:
+
+    config.middleware.use "Rack::Sprockets"
+
+Add any configs in an initializer (optional - use as necessary):
+
+    Rack::Sprockets.configure do |config|
+      config.cache = true
+      # additional configs ...
+    end
+
+You should now see `Rack::Sprockets` listed in the middleware pipeline:
+
+    rake middleware
+
+== Available Options
+key: name [default]: description
+
+* *root* ["."]:
+  the app root. the reference point for the source and public options.
+
+* *source* ['app/javascripts']:
+  the path (relative to the root) where LESS source files are located
+
+* *public* ['public']:
+  the path (relative to the root) static files are located
+
+* *hosted_at* ['/javascripts']:
+  the public HTTP path for hosted stylesheets
+
+== Available Configurations
+key: name [default]: description
+
+* *cache* [false]:
+  whether to cache the compilation output to a corresponding static file
+
+* *compress* [false]:
+  whether to apply compression to output - uses YUI Compressor if available or will remove extraneous whitespace if not.
+
+== Links
+
+*GitHub:*
+http://github.com/kelredd/rack-sprockets
+
+*Sprockets:*
+http://getsprockets.org/
+
+*Yui Compression:*
+http://github.com/sstephenson/ruby-yui-compressor
+http://developer.yahoo.com/yui/compressor/
+
+== License
+
+Copyright (c) 2010 Kelly Redding (mailto:kelly@kelredd.com)
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
