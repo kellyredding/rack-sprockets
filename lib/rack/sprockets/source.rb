@@ -55,7 +55,7 @@ module Rack::Sprockets
         compiled_js = secretary.concatenation.to_s
         
         compiled_js = case @compress
-        when :whitespace
+        when :whitespace, true
           compiled_js.delete("\n")
         when :yui
           if defined?(YUI::JavaScriptCompressor)
