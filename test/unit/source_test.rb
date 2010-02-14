@@ -88,7 +88,7 @@ class SourceTest < Test::Unit::TestCase
 
     context "with whitespace compression" do
       setup do
-        @compiled = File.read(File.join(@source_folder, "app_compressed.js"))
+        @compiled = File.read(File.join(@source_folder, "app_compiled.js"))
         @compressed_normal = Rack::Sprockets::Source.new('app', {
           :folder => @source_folder,
           :secretary => @secretary,
@@ -97,13 +97,13 @@ class SourceTest < Test::Unit::TestCase
       end
 
       should "compress the compiled js" do
-        assert_equal @compiled.strip, @compressed_normal.to_js, "the compiled js is compressed incorrectly"
+        assert_equal @compiled.strip.delete("\n"), @compressed_normal.to_js, "the compiled js is compressed incorrectly"
       end
     end
 
     context "with yui compression" do
       setup do
-        @compiled = File.read(File.join(@source_folder, "app_yui.js"))
+        @compiled = File.read(File.join(@source_folder, "app_compiled.js"))
         @compressed_normal = Rack::Sprockets::Source.new('app', {
           :folder => @source_folder,
           :secretary => @secretary,
@@ -112,7 +112,8 @@ class SourceTest < Test::Unit::TestCase
       end
 
       should "compress the compiled js" do
-        assert_equal @compiled.strip, @compressed_normal.to_js, "the compiled js is compressed incorrectly"
+        comp = YUI::JavaScriptCompressor.new(Rack::Sprockets::Source::YUI_OPTS).compress(@compiled.strip)
+        assert_equal comp, @compressed_normal.to_js, "the compiled js is compressed incorrectly"
       end
     end
 
