@@ -64,7 +64,7 @@ class Test::Unit::TestCase
         not_valid = !@request.get?
         not_valid ||= !@request.for_js?
         not_valid ||= @request.source.files.empty?
-        assert not_valid, 'request is a GET for .css format and has source'
+        assert not_valid, 'request is a GET for .js format and has source'
         assert !@request.for_sprockets?, 'the request is for sprockets'
       end
     end
@@ -77,9 +77,8 @@ class Test::Unit::TestCase
       
       should "be a valid endpoint for Rack::Sprockets" do
         assert @request.get?, 'the request is not a GET'
-        assert @request.for_css?, 'the request is not for css'
+        assert @request.for_js?, 'the request is not for js'
         assert !@request.source.files.empty?, 'the request resource has no source'
-        assert @request.for_css?, 'the request is not for css'
         assert @request.for_sprockets?, 'the request is not for sprockets'
       end
     end
