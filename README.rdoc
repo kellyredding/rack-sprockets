@@ -22,7 +22,7 @@ and use as follows:
 
     # optional - use as necessary
     Rack::Sprockets.configure do |config|
-      config.compress = true
+      config.compress = :yui
       # other configs ...
     end
 
@@ -76,7 +76,9 @@ These are similar to sprockets options and, where applicable, map directly to a 
   - Whether or not to cache the concatenation output to a corresponding static file.
 
 * .*compress* [false]
-  - Whether or not to apply compression to the concatenation output - uses YUI Compressor if available or will remove extraneous whitespace if not.
+  - Whether or not to apply compression to the concatenation output
+    - :*yui* - use YUI Compressor (gem install yui-compressor)
+    - :*whitespace* - remove extraneous whitespace only.
 
 == Links
 
