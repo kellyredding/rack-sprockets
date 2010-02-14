@@ -35,7 +35,7 @@ class OptionsTest < Test::Unit::TestCase
         assert_equal v, @options.options[MockOptions.option_name(k)]
       end
     end
-
+    
     context '#set' do
       should "set a Symbol option as #{Rack::Sprockets::Options::RACK_ENV_NS}.symbol" do
         @options.set :foo, 'bar'
@@ -56,6 +56,22 @@ class OptionsTest < Test::Unit::TestCase
       @options.options = { :foo => 'bar', 'foo.bar' => 'baz' }
       assert_equal 'bar', @options.options[MockOptions.option_name(:foo)]
       assert_equal 'baz', @options.options['foo.bar']
+    end
+
+    context "when writing to collection options" do
+      setup do
+        @option = Rack::Sprockets::Options::COLLECTION_OPTS.first
+      end
+      
+      should "force the option to an array value" do
+        @options.set @option, ["blah", "whatever"]
+        assert_kind_of Array, @options.options[@option]
+        assert_equal 2, @options.options[@option].length
+        
+        @options.set @option, "something"
+        assert_kind_of Array, @options.options[@option]
+        assert_equal 1, @options.options[@option].length
+      end
     end
 
   end

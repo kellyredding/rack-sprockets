@@ -1,2 +1,2 @@
-one_message = 'alert one';
+var one_message = 'alert one';
 alert(one_message);

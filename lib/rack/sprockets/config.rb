@@ -1,6 +1,6 @@
 module Rack::Sprockets
   
-  # Handles configuration for Rack::Less
+  # Handles configuration for Rack::Sprockets
   # Available config settings:
   # :cache
   #   whether to cache the compilation output to

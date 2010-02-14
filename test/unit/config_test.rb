@@ -38,7 +38,7 @@ class ConfigTest < Test::Unit::TestCase
       assert_equal true, config.compress
     end
     
-    should "be accessible at Rack::Less class level" do
+    should "be accessible at Rack::Sprockets class level" do
       assert_respond_to Rack::Sprockets, :configure
       assert_respond_to Rack::Sprockets, :config
       assert_respond_to Rack::Sprockets, :config=

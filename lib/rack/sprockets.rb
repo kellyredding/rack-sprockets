@@ -1,10 +1,10 @@
 require 'rack'
 require 'rack/sprockets/config'
+require 'rack/sprockets/options'
+require 'rack/sprockets/source'
 #require 'rack/sprockets/base'
-#require 'rack/sprockets/options'
 #require 'rack/sprockets/request'
 #require 'rack/sprockets/response'
-#require 'rack/sprockets/source'
 
 # === Usage
 #

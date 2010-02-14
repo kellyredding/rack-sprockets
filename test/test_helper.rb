@@ -25,6 +25,24 @@ class Test::Unit::TestCase
     })
   end
   
+  def self.should_compile_source(name, desc)
+    context desc do
+      setup do
+        @compiled = File.read(File.join(@source_folder, "#{name}_compiled.js"))
+        @source = Rack::Sprockets::Source.new(name, {
+          :folder => @source_folder,
+          :secretary => @secretary
+        })
+      end
+      
+      should "compile to Javascript" do
+        assert_equal @compiled.strip, @source.compiled.strip, '.compiled is incorrect'
+        assert_equal @compiled.strip, @source.to_js.strip, '.to_js is incorrect'
+        assert_equal @compiled.strip, @source.js.strip, '.js is incorrect'
+      end
+    end
+  end
+
   def sprockets_request(method, path_info)
     Rack::Sprockets::Request.new(@defaults.merge({
       'REQUEST_METHOD' => method,
@@ -36,33 +54,33 @@ class Test::Unit::TestCase
     Rack::Sprockets::Response.new(@defaults, js)
   end
   
-  def self.should_not_be_a_valid_rack_less_request(args)
+  def self.should_not_be_a_valid_rack_sprockets_request(args)
     context "to #{args[:method].upcase} #{args[:resource]} (#{args[:description]})" do
       setup do 
         @request = sprockets_request(args[:method], args[:resource])
       end
       
-      should "not be a valid endpoint for Rack::Less" do
+      should "not be a valid endpoint for Rack::Sprockets" do
         not_valid = !@request.get?
         not_valid ||= !@request.for_js?
         not_valid ||= @request.source.files.empty?
         assert not_valid, 'request is a GET for .css format and has source'
-        assert !@request.for_less?, 'the request is for less'
+        assert !@request.for_sprockets?, 'the request is for sprockets'
       end
     end
   end
-  def self.should_be_a_valid_rack_less_request(args)
+  def self.should_be_a_valid_rack_sprockets_request(args)
     context "to #{args[:method].upcase} #{args[:resource]} (#{args[:description]})" do
       setup do 
-        @request = less_request(args[:method], args[:resource])
+        @request = sprockets_request(args[:method], args[:resource])
       end
       
-      should "be a valid endpoint for Rack::Less" do
+      should "be a valid endpoint for Rack::Sprockets" do
         assert @request.get?, 'the request is not a GET'
         assert @request.for_css?, 'the request is not for css'
         assert !@request.source.files.empty?, 'the request resource has no source'
         assert @request.for_css?, 'the request is not for css'
-        assert @request.for_less?, 'the request is not for less'
+        assert @request.for_sprockets?, 'the request is not for sprockets'
       end
     end
   end

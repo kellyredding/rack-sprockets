@@ -30,6 +30,7 @@ module Rack::Sprockets
     #    `:expand_paths` Sprockets option.
     
     RACK_ENV_NS = "rack-sprockets"
+    COLLECTION_OPTS = ["#{RACK_ENV_NS}.load_path"]
     
     module ClassMethods
       
@@ -112,7 +113,11 @@ module Rack::Sprockets
       end
 
       def write_option(key, value)
-        options[option_name(key)] = value
+        if COLLECTION_OPTS.include?(opt_name = option_name(key))
+          options[opt_name] = [*value]
+        else
+          options[opt_name] = value
+        end
       end
 
     end
