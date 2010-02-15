@@ -38,17 +38,16 @@ module Rack::Sprockets
       File.extname(path_info)
     end
 
+    def cache
+      File.join(options(:root), options(:public), options(:hosted_at))
+    end
+
     # The Rack::Sprockets::Source that the request is for
     def source
       @source ||= begin
-        cache = if Rack::Sprockets.config.cache?
-          File.join(options(:root), options(:public), options(:hosted_at))
-        else
-          nil
-        end
         source_opts = {
           :folder    => File.join(options(:root), options(:source)),
-          :cache     => cache,
+          :cache     => Rack::Sprockets.config.cache? ? cache : nil,
           :compress  => Rack::Sprockets.config.compress,
           :secretary => {
             :root         => options(:root),
@@ -66,12 +65,25 @@ module Rack::Sprockets
       JS_PATH_FORMATS.include?(path_resource_format)
     end
 
+    def hosted_at?
+      File.basename(File.dirname(path_info)) == File.basename(options(:hosted_at))
+    end
+    
+    def exists?
+      File.exists?(File.join(cache, "#{path_resource_name}#{path_resource_format}"))
+    end
+
     # Determine if the request is for an existing Sprockets source file
     # This will be called on every request so speed is an issue
-    # => first check if the request is a GET on a js resource (fast)
-    # => then check for sprockets source files that match the request (slow)
+    # => first check if the request is a GET on a js resource in :hosted_at (fast)
+    # => don't process if a file already exists in :hosted_at
+    # => otherwise, check for sprockets source files that match the request (slow)
     def for_sprockets?
-      get? && for_js? && !source.files.empty?
+      get? && 
+      for_js? &&
+      hosted_at? &&
+      !exists? &&
+      !source.files.empty?
     end
     
   end
