@@ -2,18 +2,18 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rack-sprockets}
-  s.version = "1.0.2"
+  s.version = "1.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kelly Redding"]
-  s.date = %q{2010-02-14}
+  s.date = %q{2010-04-14}
   s.email = %q{kelly@kelredd.com}
   s.extra_rdoc_files = ["README.rdoc"]
   s.files = ["README.rdoc", "Rakefile", "lib/rack", "lib/rack/sprockets", "lib/rack/sprockets/base.rb", "lib/rack/sprockets/config.rb", "lib/rack/sprockets/options.rb", "lib/rack/sprockets/request.rb", "lib/rack/sprockets/response.rb", "lib/rack/sprockets/source.rb", "lib/rack/sprockets/version.rb", "lib/rack/sprockets.rb"]
   s.homepage = %q{http://github.com/kelredd/rack-sprockets}
   s.rdoc_options = ["--main", "README.rdoc"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Sprockets javascript preprocessing for Rack apps.}
 
   if s.respond_to? :specification_version then
