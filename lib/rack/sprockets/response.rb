@@ -11,7 +11,7 @@ module Rack::Sprockets
 
     # Rack response tuple accessors.
     attr_accessor :status, :headers, :body
-    
+
     class << self
 
       # Calculate appropriate content_length
@@ -22,7 +22,7 @@ module Rack::Sprockets
           body.size
         end
       end
-      
+
     end
 
     # Create a Response instance given the env
@@ -36,9 +36,9 @@ module Rack::Sprockets
       headers["Content-Type"] = Rack::Sprockets::MIME_TYPE
       headers["Content-Length"] = self.class.content_length(body).to_s
     end
-    
+
     def to_rack
-      [status, headers.to_hash, body]
+      [status, headers.to_hash, [body]]
     end
 
   end
