@@ -47,19 +47,11 @@ module Rack::Sprockets
       unless options.has_key?(option_name(:root)) and !options(:root).nil?
         raise(ArgumentError, "no :root option set")
       end
-      unless File.exists?(options(:root))
-        raise(ArgumentError, "the :root path ('#{options(:root)}') does not exist") 
-      end
-
       set :root, File.expand_path(options(:root))
 
       # ensure a source path is specified and does exists
       unless options.has_key?(option_name(:source)) and !options(:source).nil?
         raise(ArgumentError, "no :source option set")
-      end
-      source_path = File.join(options(:root), options(:source))
-      unless File.exists?(source_path)
-        raise(ArgumentError, "the :source path ('#{source_path}') does not exist") 
       end
     end
 

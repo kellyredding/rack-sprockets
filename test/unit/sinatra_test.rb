@@ -12,38 +12,6 @@ class SinatraTest < Test::Unit::TestCase
   end
 
   context "A Sinatra app using Rack::Sprockets" do    
-    should "fail when no options are set" do
-      assert_raise ArgumentError do
-        app.use Rack::Sprockets
-        visit "/"
-      end
-    end
-    
-    should "fail when no :root option is set" do
-      assert_raise ArgumentError do
-        app.use Rack::Sprockets, :compress => false
-        visit "/"
-      end
-    end
-    
-    should "fail when :root option does not exist" do
-      assert_raise ArgumentError do
-        app.use Rack::Sprockets,
-          :root => file_path('test','fixtures','wtf')
-        
-        visit "/"
-      end
-    end
-    
-    should "fail when :source option does not exist" do
-      assert_raise ArgumentError do
-        app.use Rack::Sprockets,
-          :root   => file_path('test','fixtures','sinatra'),
-          :source => 'wtf'
-        
-        visit "/"
-      end
-    end
     
     context "requesting valid JavaScript" do
       setup do
@@ -56,6 +24,7 @@ class SinatraTest < Test::Unit::TestCase
 
       should_respond_with_compiled_js
     end
+
   end
 
 end
