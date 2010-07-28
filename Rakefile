@@ -21,6 +21,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency("sinatra", [">= 0.9.4"])
   s.add_development_dependency("rack-test", [">= 0.5.3"])
   s.add_development_dependency("webrat", [">= 0.6.0"])
+  s.add_development_dependency("yui-compressor", [">=0.9.1"])
 
   s.add_dependency("rack", [">= 0.4"])
   s.add_dependency("sprockets", [">= 1.0.0"])
