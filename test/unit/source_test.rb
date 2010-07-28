@@ -1,4 +1,4 @@
-require "#{File.dirname(__FILE__)}/../test_helper"
+require 'test_helper'
 require 'rack/sprockets/source'
 
 class SourceTest < Test::Unit::TestCase

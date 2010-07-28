@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake/gempackagetask'
 require 'rake/testtask'
 
-require 'lib/rack/sprockets/version'
+require File.expand_path('../lib/rack/sprockets/version', __FILE__)
 
 spec = Gem::Specification.new do |s|
   s.name             = 'rack-sprockets'
