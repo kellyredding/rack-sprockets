@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'test/unit'
 require 'shoulda'
+require 'leftright'
+
 
 # Add test and lib paths to the $LOAD_PATH
 [ File.dirname(__FILE__),

@@ -18,6 +18,7 @@ spec = Gem::Specification.new do |s|
   # s.executables    = ['rack-sprockets']
 
   s.add_development_dependency("shoulda", [">= 2.10.0"])
+  s.add_development_dependency("leftright", [">= 0.0.6"])
   s.add_development_dependency("sinatra", [">= 0.9.4"])
   s.add_development_dependency("rack-test", [">= 0.5.3"])
   s.add_development_dependency("webrat", [">= 0.6.0"])
