@@ -1,0 +1,5 @@
+source "http://rubygems.org"
+
+gem 'sinatra'
+gem 'rack-sprockets', '~>1.0.4', :require => "rack/sprockets"
+gem 'yui-compressor'

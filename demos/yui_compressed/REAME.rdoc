@@ -1,0 +1,13 @@
+== YUI Compressor Rack Sprockets demo
+
+This demo will use rack sprockets to define an /javascripts/app.js resource.  To run and test this demo, do the following:
+
+1. Pull the latest rack-sprockets repo
+2. cd demos/yui_compressed
+3. bundle install
+4. ruby app.rb #starts up sinatra app on localhost:4567
+5. Browse to http://localhost:4567/javascripts/app.rb
+6. see a compressed js resource
+7. see a new cached file named app.js written to demos/yui-compressed/public/javascripts
+
+Hope this helps as a working usage demo.  This was written to help resolve issue #2: http://github.com/kelredd/rack-sprockets/issues/#issue/2

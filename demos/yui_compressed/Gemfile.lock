@@ -1,0 +1,19 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    rack (1.2.1)
+    rack-sprockets (1.0.4)
+      rack (>= 0.4)
+      sprockets (>= 1.0.0)
+    sinatra (1.0)
+      rack (>= 1.0)
+    sprockets (1.0.2)
+    yui-compressor (0.9.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rack-sprockets (~> 1.0.4)
+  sinatra
+  yui-compressor

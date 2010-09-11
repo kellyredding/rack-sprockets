@@ -1,0 +1,1 @@
+function one_message(){var a="alert one";alert(a)}function two_message(){var a="alert 2";alert(a)}function app_message(){var a="full app";alert(a)}function(){var a={};a.bar="baz"}one_message();two_message();app_message();
