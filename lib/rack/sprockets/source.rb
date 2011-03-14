@@ -68,7 +68,7 @@ module Rack::Sprockets
         end
 
         if cache? && !File.exists?(cf = File.join(@cache, "#{@js_name}.js"))
-          FileUtils.mkdir_p(@cache)
+          FileUtils.mkdir_p(File.dirname(cf))
           File.open(cf, "w") do |file|
             file.write(compiled_js)
           end
