@@ -1,15 +1,15 @@
-require 'test_helper'
+require 'test/helper'
 require 'rack/sprockets/options'
 require 'fixtures/mock_options'
 
 class OptionsTest < Test::Unit::TestCase
   context 'Rack::Sprockets::Options' do
     setup { @options = MockOptions.new }
-    
+
     should "use a namespace" do
       assert_equal 'rack-sprockets', Rack::Sprockets::Options::RACK_ENV_NS
     end
-    
+
     should "provide an option_name helper" do
       assert_respond_to MockOptions, :option_name
     end
@@ -17,13 +17,13 @@ class OptionsTest < Test::Unit::TestCase
     should "provide defaults" do
       assert_respond_to MockOptions, :defaults
     end
-    
+
     should "allow access to the options" do
       assert_respond_to @options, :options, 'no #options accessor'
       assert_kind_of Hash, @options.options, '#options is not a Hash'
       assert_equal MockOptions.defaults[MockOptions.option_name(:source)], @options.options(:source)
     end
-    
+
     { :root => ".",
       :public => 'public',
       :source => 'app/javascripts',
@@ -35,7 +35,7 @@ class OptionsTest < Test::Unit::TestCase
         assert_equal v, @options.options[MockOptions.option_name(k)]
       end
     end
-    
+
     context '#set' do
       should "set a Symbol option as #{Rack::Sprockets::Options::RACK_ENV_NS}.symbol" do
         @options.set :foo, 'bar'
@@ -62,12 +62,12 @@ class OptionsTest < Test::Unit::TestCase
       setup do
         @option = Rack::Sprockets::Options::COLLECTION_OPTS.first
       end
-      
+
       should "force the option to an array value" do
         @options.set @option, ["blah", "whatever"]
         assert_kind_of Array, @options.options[@option]
         assert_equal 2, @options.options[@option].length
-        
+
         @options.set @option, "something"
         assert_kind_of Array, @options.options[@option]
         assert_equal 1, @options.options[@option].length

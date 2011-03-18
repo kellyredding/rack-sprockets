@@ -1,4 +1,4 @@
-require 'test_helper'
+require 'test/helper'
 require 'rack/sprockets/config'
 
 class ConfigTest < Test::Unit::TestCase
@@ -6,7 +6,7 @@ class ConfigTest < Test::Unit::TestCase
     setup do
       @config = Rack::Sprockets::Config.new
     end
-    
+
     { :cache => false,
       :compress => false
     }.each do |k,v|
@@ -17,33 +17,33 @@ class ConfigTest < Test::Unit::TestCase
 
       should "default #{k} correctly" do
         assert_equal v, @config.send(k)
-      end      
+      end
     end
-    
+
     should "provide boolean readers" do
       assert_respond_to @config, :cache?, "no reader for :cache?"
       assert_equal !!@config.cache, @config.cache?
       assert_respond_to @config, :compress?, "no reader for :compress?"
       assert_equal !!@config.compress, @config.compress?
     end
-    
+
     should "allow init with setting hash" do
       settings = {
         :cache => true,
         :compress => true
       }
       config = Rack::Sprockets::Config.new settings
-      
+
       assert_equal true, config.cache
       assert_equal true, config.compress
     end
-    
+
     should "be accessible at Rack::Sprockets class level" do
       assert_respond_to Rack::Sprockets, :configure
       assert_respond_to Rack::Sprockets, :config
       assert_respond_to Rack::Sprockets, :config=
     end
-    
+
     context "given a new configuration" do
       setup do
         @old_config = Rack::Sprockets.config
@@ -56,10 +56,10 @@ class ConfigTest < Test::Unit::TestCase
       teardown do
         Rack::Sprockets.config = @old_config
       end
-      
+
       should "allow Rack::Sprockets to directly apply settings" do
         Rack::Sprockets.config = @traditional_config.dup
-        
+
         assert_equal @traditional_config.cache, Rack::Sprockets.config.cache
         assert_equal @traditional_config.compress, Rack::Sprockets.config.compress
       end
@@ -69,11 +69,11 @@ class ConfigTest < Test::Unit::TestCase
           config.cache  = true
           config.compress = true
         end
-        
+
         assert_equal @traditional_config.cache, Rack::Sprockets.config.cache
         assert_equal @traditional_config.compress, Rack::Sprockets.config.compress
       end
-      
+
     end
 
   end

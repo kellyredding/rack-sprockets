@@ -1,4 +1,4 @@
-require 'test_helper'
+require 'test/helper'
 require 'rack/sprockets/source'
 
 class SourceTest < Test::Unit::TestCase
@@ -15,7 +15,7 @@ class SourceTest < Test::Unit::TestCase
     should "accept the .js file extension" do
       assert_equal [:js], Rack::Sprockets::Source::PREFERRED_EXTENSIONS
     end
-    
+
     context "object" do
       setup do
         @basic = Rack::Sprockets::Source.new('basic', {
@@ -34,18 +34,18 @@ class SourceTest < Test::Unit::TestCase
           :compress => false
         })
       end
-      
-      should "have accessors for name and cache values" do 
+
+      should "have accessors for name and cache values" do
         assert_respond_to @basic, :js_name
         assert_equal 'basic', @basic.js_name
         assert_respond_to @basic, :cache
       end
-      
+
       should "have an option for using compression" do
         assert_equal false, @basic.compress?, 'the basic app should not compress'
         assert_equal true, @compressed.compress?, 'the compressed app should compress'
       end
-      
+
       should "have an option for caching output to files" do
         assert_equal false, @basic.cache?, 'the basic app should not cache'
         assert_equal true, @cached.cache?, 'the cached app should cache'
@@ -66,7 +66,7 @@ class SourceTest < Test::Unit::TestCase
         assert_respond_to @basic, :js, 'source does not respond to :js'
       end
     end
-    
+
     context "with no corresponding source" do
       setup do
         @none = Rack::Sprockets::Source.new('none', {

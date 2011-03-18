@@ -1,4 +1,4 @@
-require 'test_helper'
+require 'test/helper'
 require 'rack/sprockets/response'
 
 class RequestTest < Test::Unit::TestCase
@@ -20,14 +20,14 @@ class RequestTest < Test::Unit::TestCase
         :to_rack
       ].each do |a|
         assert_respond_to @response, a, "request does not respond to #{a.inspect}"
-      end   
+      end
     end
-    
-    should "set it's status to '#{Rack::Utils::HTTP_STATUS_CODES[200]}'" do 
+
+    should "set it's status to '#{Rack::Utils::HTTP_STATUS_CODES[200]}'" do
       assert_equal 200, @response.status
     end
 
-    should "set it's Content-Type to '#{Rack::Sprockets::MIME_TYPE}'" do 
+    should "set it's Content-Type to '#{Rack::Sprockets::MIME_TYPE}'" do
       assert_equal Rack::Sprockets::MIME_TYPE, @response.content_type, 'the content_type accessor is incorrect'
       assert_equal Rack::Sprockets::MIME_TYPE, @response.headers['Content-Type'], 'the Content-Type header is incorrect'
     end
