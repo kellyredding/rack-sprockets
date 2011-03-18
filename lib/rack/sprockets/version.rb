@@ -1,13 +1,5 @@
-module RackSprockets
-  module Version
-    
-    MAJOR = 1
-    MINOR = 0
-    TINY  = 4
-    
-    def self.to_s # :nodoc:
-      [MAJOR, MINOR, TINY].join('.')
-    end
-    
+module Rack
+  module Sprockets
+    VERSION = "1.0.4"
   end
 end
