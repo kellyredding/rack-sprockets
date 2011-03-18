@@ -31,12 +31,11 @@ module Rack::Sprockets
     end
     
     def path_resource_name
-      #File.basename(path_info, path_resource_format)
-      path_info.sub(options(:hosted_at),"").sub(path_resource_format,"")
+      @path_resource_name ||= path_info.sub(options(:hosted_at),"").sub(path_resource_format,"")
     end
     
     def path_resource_format
-      File.extname(path_info)
+      @path_resource_format ||= File.extname(path_info)
     end
 
     def cache
@@ -67,7 +66,6 @@ module Rack::Sprockets
     end
 
     def hosted_at?
-      #File.basename(File.dirname(path_info)) == File.basename(options(:hosted_at))
       path_info.start_with?(options(:hosted_at)) || path_info.start_with?("/"+options(:hosted_at))
     end
     
