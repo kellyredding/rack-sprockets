@@ -10,7 +10,7 @@ end
 module Rack::Sprockets
 
   class Source
-    
+
     PREFERRED_EXTENSIONS = [:js]
     SECRETARY_DEFAULTS = {
       :expand_paths => true
@@ -18,18 +18,18 @@ module Rack::Sprockets
     YUI_OPTS = {
       :munge => true
     }
-    
-    attr_reader :js_name
-    
-    def initialize(js_name, options={})
-      @js_name  = js_name
+
+    attr_reader :js_resource
+
+    def initialize(js_resource, options={})
+      @js_resource  = js_resource.gsub(/^\/+/, '')
       @compress = options[:compress]
       @cache    = options[:cache]
 
       @folder   = get_required_path(options, :folder)
       @secretary = SECRETARY_DEFAULTS.merge(options[:secretary] || {})
     end
-    
+
     def compress?
       !!@compress
     end
@@ -39,11 +39,11 @@ module Rack::Sprockets
     def cache
       @cache
     end
-    
+
     def files
       @files ||= js_sources
-    end    
-    
+    end
+
     def secretary
       @secretary_obj ||= Sprockets::Secretary.new(@secretary.merge({
         :source_files => files
@@ -53,7 +53,7 @@ module Rack::Sprockets
     def compiled
       @compiled ||= begin
         compiled_js = secretary.concatenation.to_s
-        
+
         compiled_js = case @compress
         when :whitespace, true
           compiled_js.delete("\n")
@@ -67,52 +67,52 @@ module Rack::Sprockets
           compiled_js
         end
 
-        if cache? && !File.exists?(cf = File.join(@cache, "#{@js_name}.js"))
-          FileUtils.mkdir_p(@cache)
+        if cache? && !File.exists?(cf = File.join(@cache, "#{@js_resource}.js"))
+          FileUtils.mkdir_p(File.dirname(cf))
           File.open(cf, "w") do |file|
             file.write(compiled_js)
           end
         end
-        
+
         compiled_js
       end
     end
     alias_method :to_js, :compiled
     alias_method :js, :compiled
-    
+
     protected
-    
+
     # Source files matching the js name
     def js_sources
-      @js_sources ||= preferred_sources([*@js_name])
+      @js_sources ||= preferred_source_files([*@js_resource])
     end
-    
+
     private
-    
-    # Given a list of file names, return a list of
-    # existing source files with the corresponding names
+
+    # Given a list of file resources, return a list of
+    # existing source files with the corresponding resource names
     # honoring the preferred extension list
-    def preferred_sources(file_names)
-      file_names.collect do |name|
+    def preferred_source_files(file_resources)
+      file_resources.collect do |resource|
         PREFERRED_EXTENSIONS.inject(nil) do |source_file, extension|
           source_file || begin
-            path = File.join(@folder, "#{name}.#{extension}")
+            path = File.join(@folder, "#{resource}.#{extension}")
             File.exists?(path) ? path : nil
           end
         end
       end.compact
     end
-    
+
     def get_required_path(options, path_key)
       unless options.has_key?(path_key)
         raise(ArgumentError, "no :#{path_key} option specified")
       end
       unless File.exists?(options[path_key])
-        raise(ArgumentError, "the :#{path_key} ('#{options[path_key]}') does not exist") 
+        raise(ArgumentError, "the :#{path_key} ('#{options[path_key]}') does not exist")
       end
       options[path_key]
     end
 
   end
-  
+
 end

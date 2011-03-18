@@ -22,6 +22,18 @@ class SourceTest < Test::Unit::TestCase
           :folder => @source_folder,
           :secretary => @secretary
         })
+        @nested1 = Rack::Sprockets::Source.new('something/nested', {
+          :folder => @source_folder,
+          :secretary => @secretary
+        })
+        @nested2 = Rack::Sprockets::Source.new('/other/nested', {
+          :folder => @source_folder,
+          :secretary => @secretary
+        })
+        @nested3 = Rack::Sprockets::Source.new('///wrong/nested', {
+          :folder => @source_folder,
+          :secretary => @secretary
+        })
         @compressed = Rack::Sprockets::Source.new('compressed', {
           :folder => @source_folder,
           :secretary => @secretary,
@@ -35,10 +47,19 @@ class SourceTest < Test::Unit::TestCase
         })
       end
 
-      should "have accessors for name and cache values" do
-        assert_respond_to @basic, :js_name
-        assert_equal 'basic', @basic.js_name
+      should "have accessors for js_resource and cache values" do
+        assert_respond_to @basic, :js_resource
+        assert_equal 'basic', @basic.js_resource
         assert_respond_to @basic, :cache
+      end
+
+      should "handle nested js_resource" do
+        assert_equal 'something/nested', @nested1.js_resource
+      end
+
+      should "strip any leading '/' on js_resource" do
+        assert_equal 'other/nested', @nested2.js_resource
+        assert_equal 'wrong/nested', @nested3.js_resource
       end
 
       should "have an option for using compression" do
@@ -119,6 +140,7 @@ class SourceTest < Test::Unit::TestCase
 
     context "with caching" do
       setup do
+        FileUtils.rm_rf(File.dirname(@cache)) if File.exists?(File.dirname(@cache))
         @expected = Rack::Sprockets::Source.new('app', {
           :folder => @source_folder,
           :secretary => @secretary,
@@ -127,7 +149,7 @@ class SourceTest < Test::Unit::TestCase
         @cached_file = File.join(@cache, "app.js")
       end
       teardown do
-        FileUtils.rm(@cached_file) if File.exists?(@cached_file)
+        FileUtils.rm_rf(File.dirname(@cache)) if File.exists?(File.dirname(@cache))
       end
 
       should "store the compiled js to a file in the cache" do
