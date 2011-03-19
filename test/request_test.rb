@@ -12,11 +12,14 @@ class RequestTest < Test::Unit::TestCase
     context "basic object" do
       should "have some attributes" do
         [ :options,
+          :hosted_at_option,
           :request_method,
           :path_info,
-          :path_resource_name,
-          :path_resource_format,
+          :path_info_resource,
+          :path_info_format,
           :source,
+          :hosted_at?,
+          :cached?,
           :for_js?,
           :for_sprockets?
         ].each do |a|
@@ -24,14 +27,41 @@ class RequestTest < Test::Unit::TestCase
         end
       end
 
-      should "know it's resource name" do
-        assert_equal 'foo', sprockets_request("GET", "/foo.js").path_resource_name
-        assert_equal 'bar', sprockets_request("GET", "/foo/bar.js").path_resource_name
+      should "sanitize the :hosted_at options" do
+        req = sprockets_request("GET", "/something.js")
+        req.options = {:hosted_at => "/here"}
+        assert_equal "/here", req.hosted_at_option
+
+        req = sprockets_request("GET", "/something.js")
+        req.options = {:hosted_at => "//there"}
+        assert_equal "/there", req.hosted_at_option
+
+        req = sprockets_request("GET", "/something.js")
+        req.options = {:hosted_at => "/where/"}
+        assert_equal "/where", req.hosted_at_option
+
+        req = sprockets_request("GET", "/something.js")
+        req.options = {:hosted_at => "what/"}
+        assert_equal "/what", req.hosted_at_option
+
+        req = sprockets_request("GET", "/something.js")
+        req.options = {:hosted_at => "why//"}
+        assert_equal "/why", req.hosted_at_option
+      end
+
+      should "know it's resource" do
+        assert_equal '/something', sprockets_request("GET", "/javascripts/something.js").path_info_resource
+        assert_equal '/something.awesome', sprockets_request("GET", "/javascripts/something.awesome.js").path_info_resource
+        assert_equal '/nested/something', sprockets_request("GET", "/javascripts/nested/something.js").path_info_resource
+        assert_equal '/something', sprockets_request("GET", "/something.js").path_info_resource
+        assert_equal '/something', sprockets_request("GET", "///something.js").path_info_resource
+        assert_equal '/nested/something', sprockets_request("GET", "/nested/something.js").path_info_resource
+        assert_equal '/nested/something', sprockets_request("GET", "/nested///something.js").path_info_resource
       end
 
       should "know it's resource format" do
-        assert_equal '.js', sprockets_request("GET", "/foo.js").path_resource_format
-        assert_equal '.js', sprockets_request("GET", "/foo/bar.js").path_resource_format
+        assert_equal '.js', sprockets_request("GET", "/foo.js").path_info_format
+        assert_equal '.js', sprockets_request("GET", "/foo/bar.js").path_info_format
       end
     end
 
@@ -93,6 +123,18 @@ class RequestTest < Test::Unit::TestCase
       :method      => "GET",
       :resource    => "/javascripts/app.js",
       :description => "a js resource hosted where Rack::Sprockets expects them that matches source"
+    })
+
+    should_not_be_a_valid_rack_sprockets_request({
+      :method      => "GET",
+      :resource    => "/javascripts/nested/foo.js",
+      :description => "a nested js resource hosted where Rack::Sprockets expects them but does not match any source"
+    })
+
+    should_be_a_valid_rack_sprockets_request({
+      :method      => "GET",
+      :resource    => "/javascripts/nested/thing.js",
+      :description => "a nested js resource hosted where Rack::Sprockets expects them that matches source"
     })
   end
 

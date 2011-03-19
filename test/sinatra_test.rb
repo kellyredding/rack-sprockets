@@ -25,6 +25,18 @@ class SinatraTest < Test::Unit::TestCase
       should_respond_with_compiled_js
     end
 
+    context "requesting valid nested JavaScript" do
+      setup do
+        app.use Rack::Sprockets,
+          :root => file_path('test','fixtures','sinatra')
+
+        @compiled = File.read(file_path('test','fixtures','sinatra','app','javascripts', 'nested', 'thing_compiled.js'))
+        @response = visit "/javascripts/nested/thing.js"
+      end
+
+      should_respond_with_compiled_js
+    end
+
   end
 
 end

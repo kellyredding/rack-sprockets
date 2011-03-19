@@ -11,7 +11,7 @@ module Rack::Sprockets
 
   class Request < Rack::Request
     include Rack::Sprockets::Options
-    
+
     JS_PATH_FORMATS = ['.js']
 
     # The HTTP request method. This is the standard implementation of this
@@ -21,25 +21,43 @@ module Rack::Sprockets
     def request_method
       @env['REQUEST_METHOD']
     end
-    
-    def path_info
-      @env['PATH_INFO']
-    end
-    
+
     def http_accept
       @env['HTTP_ACCEPT']
     end
-    
-    def path_resource_name
-      File.basename(path_info, path_resource_format)
+
+    def path_info
+      @env['PATH_INFO']
     end
-    
-    def path_resource_format
-      File.extname(path_info)
+
+    def hosted_at_option
+      # sanitized :hosted_at option
+      #  remove any trailing '/'
+      #  ensure single leading '/'
+      @hosted_at_option ||= options(:hosted_at).sub(/\/+$/, '').sub(/^\/*/, '/')
+    end
+
+    def path_info_resource
+      # sanitized path to the resource being requested
+      #  ensure single leading '/'
+      #  remove any resource format
+      #  ex:
+      #  '/something.js' => '/something'
+      #  '/nested/something.js' => '/nested/something'
+      #  '///something.js' => '/something'
+      #  '/nested///something.js' => '/nested/something'
+      @path_info_resource ||= File.join(
+        File.dirname(path_info.gsub(/\/+/, '/')).sub(/^#{hosted_at_option}/, ''),
+        File.basename(path_info.gsub(/\/+/, '/'), path_info_format)
+      ).sub(/^\/*/, '/')
+    end
+
+    def path_info_format
+      @path_info_format ||= File.extname(path_info.gsub(/\/+/, '/'))
     end
 
     def cache
-      File.join(options(:root), options(:public), options(:hosted_at))
+      File.join(options(:root), options(:public), hosted_at_option)
     end
 
     # The Rack::Sprockets::Source that the request is for
@@ -55,36 +73,36 @@ module Rack::Sprockets
             :expand_paths => options(:expand_paths)
           }
         }
-        Source.new(path_resource_name, source_opts)
+        Source.new(path_info_resource, source_opts)
       end
     end
 
     def for_js?
       (http_accept && http_accept.include?(Rack::Sprockets::MIME_TYPE)) ||
       (media_type  && media_type.include?(Rack::Sprockets::MIME_TYPE )) ||
-      JS_PATH_FORMATS.include?(path_resource_format)
+      JS_PATH_FORMATS.include?(path_info_format)
     end
 
     def hosted_at?
-      File.basename(File.dirname(path_info)) == File.basename(options(:hosted_at))
-    end
-    
-    def exists?
-      File.exists?(File.join(cache, "#{path_resource_name}#{path_resource_format}"))
+      path_info =~ /^#{hosted_at_option}/
     end
 
-    # Determine if the request is for an existing Sprockets source file
+    def cached?
+      File.exists?(File.join(cache, "#{path_info_resource}#{path_info_format}"))
+    end
+
+    # Determine if the request is for a non-cached existing Sprockets source file
     # This will be called on every request so speed is an issue
     # => first check if the request is a GET on a js resource in :hosted_at (fast)
-    # => don't process if a file already exists in :hosted_at
+    # => don't process if a file has already been cached
     # => otherwise, check for sprockets source files that match the request (slow)
     def for_sprockets?
-      get? && 
+      get? &&               # GET on js resource in :hosted_at (fast, check first)
       for_js? &&
       hosted_at? &&
-      !exists? &&
-      !source.files.empty?
+      !cached? &&           # resource not cached (little slower)
+      !source.files.empty?  # there is source for the resource (slow, check last)
     end
-    
+
   end
 end
