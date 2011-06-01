@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rack-sprockets (1.0.4)
+    rack-sprockets (1.1.0)
       rack (~> 1.0)
       sprockets (~> 1.0)
 
@@ -37,11 +37,9 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.0)
-  rack (~> 1.0)
   rack-sprockets!
   rack-test (>= 0.5.3)
   sinatra (>= 0.9.4)
-  sprockets (~> 1.0)
   test-belt (= 0.2.1)
   webrat (>= 0.6.0)
   yui-compressor (>= 0.9.1)
