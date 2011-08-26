@@ -1,9 +1,10 @@
-require 'test/helper'
+require 'assert'
 require 'rack/sprockets/response'
 
-class RequestTest < Test::Unit::TestCase
+module Rack::Sprockets
 
-  context 'Rack::Sprockets::Response' do
+  class RequestTest < Assert::Context
+    desc 'Rack::Sprockets::Response'
     setup do
       @defaults = env_defaults
       @js = File.read(file_path('test','fixtures','sinatra','app','javascripts', 'app_compiled.js'))
@@ -19,7 +20,7 @@ class RequestTest < Test::Unit::TestCase
         :content_type,
         :to_rack
       ].each do |a|
-        assert_respond_to @response, a, "request does not respond to #{a.inspect}"
+        assert_respond_to a, @response, "request does not respond to #{a.inspect}"
       end
     end
 
@@ -36,6 +37,7 @@ class RequestTest < Test::Unit::TestCase
       assert_equal Rack::Sprockets::Response.content_length(@js), @response.content_length, 'the content_length accessor is incorrect'
       assert_equal Rack::Sprockets::Response.content_length(@js), @response.headers['Content-Length'].to_i
     end
+
   end
 
 end
