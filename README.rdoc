@@ -2,7 +2,7 @@
 
 == Description
 
-Sprockets javascript preprocessing for Rack apps.
+Sprockets 1 javascript preprocessing for Rack apps.
 
 == Installation
 
