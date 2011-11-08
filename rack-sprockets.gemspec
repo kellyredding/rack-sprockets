@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_development_dependency("bundler", ["~> 1.0"])
-  s.add_development_dependency("assert", ["~>0.3.0"])
+  s.add_development_dependency("assert", ["~>0.7.0"])
 
   s.add_development_dependency("sinatra", ["~> 1.2"])
   s.add_development_dependency("rack-test", ["~> 0.6.0"])
