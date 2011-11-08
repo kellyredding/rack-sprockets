@@ -28,10 +28,14 @@ module Rack::Sprockets
 
     { :root => ".",
       :public => 'public',
-      :source => 'app/javascripts',
-      :hosted_at => '/javascripts',
-      :load_path => ["app/javascripts/", "vendor/javascripts/"],
-      :expand_paths => true
+      :hosted_at => '/assets',
+      :load_path => ["app/assets/", "lib/assets/", "vendor/assets/"],
+      :version => nil,
+      :debug => false,
+      :digest => false,
+      :compress => false,
+      :js_compressor => nil,
+      :css_compressor => nil
     }.each do |k,v|
       should "default #{k} correctly" do
         assert_equal v, @options.options[MockOptions.option_name(k)]
