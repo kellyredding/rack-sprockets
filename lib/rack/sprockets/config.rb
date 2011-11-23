@@ -110,7 +110,8 @@ module Rack::Sprockets
     def passthru_configs
       self.config.to_hash.reject do |k,v|
         v.nil? || [ :root, :public, :hosted_at, :mime_types,
-          :load_path, :cache
+          :load_path, :cache,
+          :sprockets
         ].include?(k)
       end
     end
@@ -203,7 +204,7 @@ module Rack::Sprockets
       end
 
       def for_media_type?(media_type_list)
-        (self.media_types & media_type_list).size > 0
+        (self.media_types & (media_type_list || [])).size > 0
       end
       alias_method :accept?, :for_media_type?
 

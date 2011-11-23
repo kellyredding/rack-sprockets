@@ -210,6 +210,7 @@ module Rack::Sprockets::Config
     should "know if it is for a media type of not" do
       assert subject.for_media_type? ['some/format']
       assert_not subject.for_media_type? ['unknown/format']
+      assert_not subject.for_media_type? nil
     end
 
   end
@@ -225,7 +226,7 @@ module Rack::Sprockets::Config
         :version => "1.0"
       })
     end
-    subject { @base.sprockets_env }
+    subject { @base.config.sprockets }
 
     should "have the load_path applied" do
       @base.config.load_path.each do |path|

@@ -1,155 +1,202 @@
 require 'assert'
-require 'rack/sprockets/base'
+
 require 'rack/sprockets/request'
+require 'test/fixtures/mock_base'
 
 module Rack::Sprockets
 
   class RequestTests < Assert::Context
     desc 'Rack::Sprockets::Request'
     setup do
-      @defaults = env_defaults
+      # @defaults = env_defaults
+      @base = MockBase.new({
+        :load_path => ["test/fixtures/sinatra/app/javascripts"],
+        :hosted_at => "/javascripts",
+        :mime_types => [['application/javascript', '.js']]
+      })
+      @request = sprockets_request(@base.config, "GET", "/foo.js")
     end
+    subject { @request }
 
-    should "have some attributes" do
-      [ :options,
-        :hosted_at_option,
-        :request_method,
+    should have_instance_methods :asset, :asset_path
+    should have_instance_methods :hosted_at?, :sprockets_media?, :for_asset?
+
+    should "have some request attributes" do
+      [ :request_method,
         :path_info,
-        :path_info_resource,
-        :path_info_format,
-        :source,
-        :hosted_at?,
-        :cached?,
-        :for_js?,
-        :for_sprockets?
+        :query_string,
+        :http_accept,
+        :http_if_modified,
+        :http_etag,
       ].each do |a|
-        assert_respond_to a, sprockets_request("GET", "/foo.js"), "request does not respond to #{a.inspect}"
+        assert_respond_to a, @request, "request does not respond to #{a.inspect}"
       end
     end
 
-    should "sanitize the :hosted_at options" do
-      req = sprockets_request("GET", "/something.js")
-      req.options = {:hosted_at => "/here"}
-      assert_equal "/here", req.hosted_at_option
+    should "know if it is forbidden" do
+      req = sprockets_request(@base.config, "GET", "/lala.js")
+      assert_not req.path_info_forbidden?
 
-      req = sprockets_request("GET", "/something.js")
-      req.options = {:hosted_at => "//there"}
-      assert_equal "/there", req.hosted_at_option
-
-      req = sprockets_request("GET", "/something.js")
-      req.options = {:hosted_at => "/where/"}
-      assert_equal "/where", req.hosted_at_option
-
-      req = sprockets_request("GET", "/something.js")
-      req.options = {:hosted_at => "what/"}
-      assert_equal "/what", req.hosted_at_option
-
-      req = sprockets_request("GET", "/something.js")
-      req.options = {:hosted_at => "why//"}
-      assert_equal "/why", req.hosted_at_option
+      req = sprockets_request(@base.config, "GET", "/../lala.css")
+      assert req.path_info_forbidden?
     end
 
-    should "know it's resource" do
-      assert_equal '/something', sprockets_request("GET", "/javascripts/something.js").path_info_resource
-      assert_equal '/something.awesome', sprockets_request("GET", "/javascripts/something.awesome.js").path_info_resource
-      assert_equal '/nested/something', sprockets_request("GET", "/javascripts/nested/something.js").path_info_resource
-      assert_equal '/something', sprockets_request("GET", "/something.js").path_info_resource
-      assert_equal '/something', sprockets_request("GET", "///something.js").path_info_resource
-      assert_equal '/nested/something', sprockets_request("GET", "/nested/something.js").path_info_resource
-      assert_equal '/nested/something', sprockets_request("GET", "/nested///something.js").path_info_resource
+    should "know if it is hosted" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/lala.js")
+      assert req.hosted_at?
+
+      req = sprockets_request(@base.config, "GET", "/lala.js")
+      assert_not req.hosted_at?
+
+      req = sprockets_request(@base.config, "GET", "/stylesheets/lala.css")
+      assert_not req.hosted_at?
     end
 
-    should "know it's resource format" do
-      assert_equal '.js', sprockets_request("GET", "/foo.js").path_info_format
-      assert_equal '.js', sprockets_request("GET", "/foo/bar.js").path_info_format
+    should "know if it is for sprockets media" do
+      req = sprockets_request(@base.config, "GET", "/lala.js")
+      assert req.sprockets_media?
+
+      req = sprockets_request(@base.config, "GET", "/lala.css")
+      assert_not req.sprockets_media?
     end
 
-    should "match :compress settings with Rack::Sprockets:Config" do
-      req = sprockets_request("GET", "/javascripts/app.js")
-      assert_equal Rack::Sprockets.config.compress?, req.source.compress?
+    should "know its unescaped path info" do
+      req = sprockets_request(@base.config, "GET", "/lala.js")
+      assert_equal "/lala.js", req.unescaped_path_info
+
+      req = sprockets_request(@base.config, "GET", "/lala%20lala.js")
+      assert_equal "/lala lala.js", req.unescaped_path_info
     end
 
-    should "set it's cache value to nil when Rack::Sprockets not configured to cache" do
-      Rack::Sprockets.config = Config.new
-      req = sprockets_request("GET", "/javascripts/app.js")
+    should "know its asset fingerprint" do
+      req = sprockets_request(@base.config, "GET", "/lala.js")
+      assert_equal nil, req.asset_fingerprint
 
-      assert_equal false, req.source.cache?
-      assert_equal nil, req.source.cache
+      req = sprockets_request(@base.config, "GET", "/lala-3462346246.js")
+      assert_equal "3462346246", req.asset_fingerprint
+
+      req = sprockets_request(@base.config, "GET", "/lala-lala.js")
+      assert_equal nil, req.asset_fingerprint
+
+      req = sprockets_request(@base.config, "GET", "/lala-0aa2105d29558f3eb790d411d7d8fb66.js")
+      assert_equal "0aa2105d29558f3eb790d411d7d8fb66", req.asset_fingerprint
+
+      req = sprockets_request(@base.config, "GET", "/lala-0aa2105d29558f3eb790d411d7d8fb66lkasdkketw.js")
+      assert_equal nil, req.asset_fingerprint
+
     end
 
-    should "set it's cache to the appropriate path when Rack::Sprockets configured to cache" do
-      Rack::Sprockets.config = Config.new :cache => true
-      req = sprockets_request("GET", "/javascripts/app.js")
-      cache_path = File.join(req.options(:root), req.options(:public), req.options(:hosted_at))
+    should "know it's asset_path" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/lala.js")
+      assert_equal "lala.js", req.asset_path
 
-      assert_equal true, req.source.cache?
-      assert_equal cache_path, req.source.cache
+      req = sprockets_request(@base.config, "GET", "/lala.awesome.js")
+      assert_equal "lala.awesome.js", req.asset_path
+
+      req = sprockets_request(@base.config, "GET", "/stylesheets/lala.css")
+      assert_equal "stylesheets/lala.css", req.asset_path
+
+      req = sprockets_request(@base.config, "GET", "/lala-3462346246.js")
+      assert_equal "lala.js", req.asset_path
     end
 
-  end
+    should "return its sprockets asset" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/alert_one.js")
+      assert req.asset
+      assert_kind_of Sprockets::BundledAsset, req.asset
 
-  class PostHtmlInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "POST",
-      :resource    => "/foo.html",
-      :description => "a non-js resource"
-    })
-  end
+      req = sprockets_request(@base.config, "GET", "/javascripts/alert_one.js", "body=1")
+      assert req.asset
+      assert_kind_of Sprockets::ProcessedAsset, req.asset
 
-  class PostInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "POST",
-      :resource    => "/foo.css",
-      :description => "a css resource"
-    })
-  end
+      req = sprockets_request(@base.config, "GET", "/javascripts/does_not_exist.js")
+      assert_not req.asset
+    end
 
-  class GetHtmlInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/foo.html",
-      :description => "a non-js resource"
-    })
-  end
 
-  class HostedWrongInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/foo.js",
-      :description => "a js resource hosted somewhere other than where Rack::Sprockets expects them"
-    })
-  end
+    should "pass on non-GET forbidden requests for hosted non-media resources" do
+      req = sprockets_request(@base.config, "POST", "/javascripts/../alert_one.html")
+      assert_not req.for_asset?
+    end
 
-  class NoSourceInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/javascripts/foo.js",
-      :description => "a js resource hosted where Rack::Sprockets expects them but does not match any source"
-    })
-  end
+    should "pass on non-GET forbidden requests for hosted media resources" do
+      req = sprockets_request(@base.config, "POST", "/javascripts/../alert_one.js")
+      assert_not req.for_asset?
+    end
 
-  class NestedInvalidRequestTest < RequestTests
-    should_not_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/javascripts/nested/foo.js",
-      :description => "a nested js resource hosted where Rack::Sprockets expects them but does not match any source"
-    })
-  end
+    should "pass on non-GET forbidden requests for not-hosted non-media resources" do
+      req = sprockets_request(@base.config, "POST", "/something/../alert_one.html")
+      assert_not req.for_asset?
+    end
 
-  class ValidRequestTest < RequestTests
-    should_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/javascripts/app.js",
-      :description => "a js resource hosted where Rack::Sprockets expects them that matches source"
-    })
-  end
+    should "pass on non-GET forbidden requests for not-hosted media resources" do
+      req = sprockets_request(@base.config, "POST", "/something/../alert_one.js")
+      assert_not req.for_asset?
+    end
 
-  class NestedValidRequestTest < RequestTests
-    should_be_a_valid_rack_sprockets_request({
-      :method      => "GET",
-      :resource    => "/javascripts/nested/thing.js",
-      :description => "a nested js resource hosted where Rack::Sprockets expects them that matches source"
-    })
+
+    should "pass on non-GET allowed requests for hosted non-media resources" do
+      req = sprockets_request(@base.config, "POST", "/javascripts/alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "pass on non-GET allowed requests for hosted media resources" do
+      req = sprockets_request(@base.config, "POST", "/javascripts/alert_one.js")
+      assert_not req.for_asset?
+    end
+
+    should "pass on non-GET allowed requests for not-hosted non-media resources" do
+      req = sprockets_request(@base.config, "POST", "/something/alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "pass on non-GET allowed requests for not-hosted media resources" do
+      req = sprockets_request(@base.config, "POST", "/something/alert_one.js")
+      assert_not req.for_asset?
+    end
+
+
+    should "pass on GET forbidden requests for hosted non-media resources" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/../alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "pass on GET forbidden requests for hosted media resources" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/../alert_one.js")
+      assert_not req.for_asset?
+    end
+
+    should "pass on GET forbidden requests for not-hosted non-media resources" do
+      req = sprockets_request(@base.config, "GET", "/something/../alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "pass on GET forbidden requests for not-hosted media resources" do
+      req = sprockets_request(@base.config, "GET", "/something/../alert_one.js")
+      assert_not req.for_asset?
+    end
+
+
+    should "pass on GET allowed requests for hosted non-media resources" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "accept GET allowed requests for hosted media resources" do
+      req = sprockets_request(@base.config, "GET", "/javascripts/alert_one.js")
+      assert req.for_asset?
+    end
+
+    should "pass on GET allowed requests for not-hosted non-media resources" do
+      req = sprockets_request(@base.config, "GET", "/something/alert_one.html")
+      assert_not req.for_asset?
+    end
+
+    should "pass on GET allowed requests for not-hosted media resources" do
+      req = sprockets_request(@base.config, "GET", "/something/alert_one.js")
+      assert_not req.for_asset?
+    end
+
   end
 
 end

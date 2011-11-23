@@ -1,7 +1,4 @@
 require 'rack/request'
-require 'rack/sprockets'
-require 'rack/sprockets/options'
-require 'rack/sprockets/source'
 
 module Rack::Sprockets
 
@@ -10,9 +7,6 @@ module Rack::Sprockets
   # as well as some additional convenience methods defined here
 
   class Request < Rack::Request
-    include Rack::Sprockets::Options
-
-    JS_PATH_FORMATS = ['.js']
 
     # The HTTP request method. This is the standard implementation of this
     # method but is respecified here due to libraries that attempt to modify
@@ -22,86 +16,106 @@ module Rack::Sprockets
       @env['REQUEST_METHOD']
     end
 
-    def http_accept
-      @env['HTTP_ACCEPT']
-    end
-
     def path_info
       @env['PATH_INFO']
     end
 
-    def hosted_at_option
-      # sanitized :hosted_at option
-      #  remove any trailing '/'
-      #  ensure single leading '/'
-      @hosted_at_option ||= options(:hosted_at).sub(/\/+$/, '').sub(/^\/*/, '/')
+    def query_string
+      @env["QUERY_STRING"]
     end
 
-    def path_info_resource
-      # sanitized path to the resource being requested
-      #  ensure single leading '/'
-      #  remove any resource format
-      #  ex:
-      #  '/something.js' => '/something'
-      #  '/nested/something.js' => '/nested/something'
-      #  '///something.js' => '/something'
-      #  '/nested///something.js' => '/nested/something'
-      @path_info_resource ||= File.join(
-        File.dirname(path_info.gsub(/\/+/, '/')).sub(/^#{hosted_at_option}/, ''),
-        File.basename(path_info.gsub(/\/+/, '/'), path_info_format)
-      ).sub(/^\/*/, '/')
+    def http_accept
+      @env['HTTP_ACCEPT']
     end
 
-    def path_info_format
-      @path_info_format ||= File.extname(path_info.gsub(/\/+/, '/'))
+    def http_if_modified
+      @env['HTTP_IF_MODIFIED_SINCE']
     end
 
-    def cache
-      File.join(options(:root), options(:public), hosted_at_option)
+    def http_etag
+      @env['HTTP_IF_NONE_MATCH']
     end
 
-    # The Rack::Sprockets::Source that the request is for
-    def source
-      @source ||= begin
-        source_opts = {
-          :folder    => File.join(options(:root), options(:source)),
-          :cache     => Rack::Sprockets.config.cache? ? cache : nil,
-          :compress  => Rack::Sprockets.config.compress,
-          :secretary => {
-            :root         => options(:root),
-            :load_path    => options(:load_path),
-            :expand_paths => options(:expand_paths)
-          }
-        }
-        Source.new(path_info_resource, source_opts)
+    def initialize(config, env)
+      @config = config
+      super(env)
+    end
+
+    # Determine if the request is for a non-cached existing Sprockets asset
+    # This will be called on every request so speed is an issue
+    # => first check if the request is GET for :hosted_at sprockets media (fast)
+    # => otherwise, check for a sprockets asset that matches the request (slow)
+    # TODO: test
+    def for_asset?
+      get? &&          # GET for :hosted_at sprockets media? (fast, check first)
+      !path_info_forbidden? &&
+      hosted_at? &&
+      sprockets_media? &&
+      asset            # an asset for the request? (slowest, check last)
+    end
+
+    # The Sprockets Asset being requested
+    def asset
+      @asset ||= @config.sprockets.find_asset(asset_path, :bundle => !query_body_only?)
+    end
+
+    # take the request, config, and sprockets env info
+    # build an asset lookup path
+    def asset_path
+      @asset_path ||= unescaped_path_info.
+                      sub("-#{asset_fingerprint}", '').
+                      sub(/^#{@config.hosted_at}/, '').
+                      sub(/^\//, '')
+    end
+
+    # Asset digest fingerprint.
+    # ie. "foo-0aa2105d29558f3eb790d411d7d8fb66.js"
+    #   => "0aa2105d29558f3eb790d411d7d8fb66"
+    def asset_fingerprint
+      unescaped_path_info[/-([0-9a-f]{7,40})\.[^.]+$/, 1]
+    end
+
+    def unescaped_path_info
+      @unescaped_path_info ||= unescape(path_info.to_s)
+    end
+
+    # is this request for sprockets media, based on the config
+    def sprockets_media?
+      @config.mime_types.for_format?(File.extname(path_info)) ||
+      @config.mime_types.accept?(http_accept) ||
+      @config.mime_types.for_media_type?(media_type)
+    end
+
+    # is this request hosted by the middleware, based on its config
+    def hosted_at?
+      path_info =~ /^#{@config.hosted_at}/
+    end
+
+    # Prevent access to files elsewhere on the file system
+    # ie. http://example.org/assets/../../../etc/passwd
+    def path_info_forbidden?
+      path_info =~ /\.\.\//
+    end
+
+    private
+
+    # URI.unescape is deprecated on 1.9. We need to use URI::Parser
+    # if its available.
+    if defined? URI::DEFAULT_PARSER
+      def unescape(str)
+        URI::DEFAULT_PARSER.unescape(str).tap do |str|
+          (e = Encoding.default_internal) ? str.force_encoding(e) : str
+        end
+      end
+    else
+      def unescape(str)
+        URI.unescape(str)
       end
     end
 
-    def for_js?
-      (http_accept && http_accept.include?(Rack::Sprockets::MIME_TYPE)) ||
-      (media_type  && media_type.include?(Rack::Sprockets::MIME_TYPE )) ||
-      JS_PATH_FORMATS.include?(path_info_format)
-    end
-
-    def hosted_at?
-      path_info =~ /^#{hosted_at_option}/
-    end
-
-    def cached?
-      File.exists?(File.join(cache, "#{path_info_resource}#{path_info_format}"))
-    end
-
-    # Determine if the request is for a non-cached existing Sprockets source file
-    # This will be called on every request so speed is an issue
-    # => first check if the request is a GET on a js resource in :hosted_at (fast)
-    # => don't process if a file has already been cached
-    # => otherwise, check for sprockets source files that match the request (slow)
-    def for_sprockets?
-      get? &&               # GET on js resource in :hosted_at (fast, check first)
-      for_js? &&
-      hosted_at? &&
-      !cached? &&           # resource not cached (little slower)
-      !source.files.empty?  # there is source for the resource (slow, check last)
+    # Test if `?body=1` or `body=true` query param is set
+    def query_body_only?
+      query_string.to_s =~ /body=(1|t)/
     end
 
   end
