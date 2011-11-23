@@ -45,12 +45,9 @@ module Rack::Sprockets::Config
 
     should "default the pass-thru Sprockets configs" do
       {
-        :logger => nil,
-        :version => nil,
-        :debug => false,
-        :digest => false,
         :digest_class => nil,
-        :compress => false,
+        :version => nil,
+        :logger => nil,
         :js_compressor => nil,
         :css_compressor => nil
       }.each do |k,v|
@@ -76,9 +73,7 @@ module Rack::Sprockets::Config
 
     should "complain if no root config" do
       assert_validation
-      puts "root: #{@config.root.inspect}"
       @config.root = nil
-      puts "root: #{@config.root.inspect}"
       assert_validation(ArgumentError)
     end
 
@@ -215,6 +210,38 @@ module Rack::Sprockets::Config
     should "know if it is for a media type of not" do
       assert subject.for_media_type? ['some/format']
       assert_not subject.for_media_type? ['unknown/format']
+    end
+
+  end
+
+
+
+  class SprocketsEnvTests < BaseTests
+    desc "Sprockets env"
+    setup do
+      @base = MockBase.new({
+        :load_path => ["app", "lib"],
+        :cache => "/tmp",
+        :version => "1.0"
+      })
+    end
+    subject { @base.sprockets_env }
+
+    should "have the load_path applied" do
+      @base.config.load_path.each do |path|
+        exp_path = File.expand_path("./#{path}", @base.config.root)
+        assert_included exp_path, subject.paths
+      end
+    end
+
+    should "have the cache config applied" do
+      assert_equal @base.config.cache, subject.cache
+    end
+
+    should "have any passthru configs applied" do
+      @base.send(:passthru_configs).each do |k,v|
+        assert_equal v, subject.send(k)
+      end
     end
 
   end

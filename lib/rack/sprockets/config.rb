@@ -67,12 +67,15 @@ module Rack::Sprockets
         ]
         option :public,         :default => 'public'
         option :load_path,      :default => []
-        option :logger,         :default => nil
-        option :version,        :default => nil
-        option :debug,          :default => false
-        option :digest,         :default => false
-        option :digest_class,   :default => nil
-        option :compress,       :default => false
+        # option :debug,          :default => false
+        # option :digest,         :default => false
+        # option :compress,       :default => false
+
+        # Sprockets pass-thru configs (#=> <sprockets default value>)
+        option :digest_class,   :default => nil   #=> ::Digest::MD5
+        option :version,        :default => nil   #=> ''
+        option :logger,         :default => nil   #=> $stderr, fatal
+
         option :js_compressor,  :default => nil
         option :css_compressor, :default => nil
       end
@@ -87,6 +90,29 @@ module Rack::Sprockets
       # ensure a load path is specified and not empty
       raise(ArgumentError, "no :load_path option") if self.config.load_path.nil?
       raise(ArgumentError, "empty :load_path option") if self.config.load_path.empty?
+    end
+
+    def configured_sprockets_env
+      ::Sprockets::Environment.new(self.config.root) do |e|
+        # apply the load_path config
+        self.config.load_path.each { |p| e.append_path(p) }
+
+        # apply any cache config
+        e.cache = self.config.cache
+
+        # apply any passthru configs
+        passthru_configs.each { |k, v| e.send("#{k}=", v) }
+      end
+    end
+
+    # only pass-thru configs to sprockets that are not nil
+    # and are not handled by rack-sprockets directly
+    def passthru_configs
+      self.config.to_hash.reject do |k,v|
+        v.nil? || [ :root, :public, :hosted_at, :mime_types,
+          :load_path, :cache
+        ].include?(k)
+      end
     end
 
 
