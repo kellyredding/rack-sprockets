@@ -19,8 +19,8 @@ class Assert::Context
     })
   end
 
-  def sprockets_response(js)
-    Rack::Sprockets::Response.new(@defaults, js)
+  def sprockets_response(config, request)
+    Rack::Sprockets::Response.new(config, request ? request.env : {}, request)
   end
 
 

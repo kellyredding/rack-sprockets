@@ -8,7 +8,6 @@ module Rack::Sprockets
   class RequestTests < Assert::Context
     desc 'Rack::Sprockets::Request'
     setup do
-      # @defaults = env_defaults
       @base = MockBase.new({
         :load_path => ["test/fixtures/sinatra/app/javascripts"],
         :hosted_at => "/javascripts",
