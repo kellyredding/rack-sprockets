@@ -9,4 +9,4 @@ alert(app_message);
 function () {
   var foo = {};
   foo["bar"] = "baz";
-}
+};

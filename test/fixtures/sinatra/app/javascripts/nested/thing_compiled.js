@@ -11,4 +11,4 @@ alert(thing_message);
 function () {
   var ahh = {};
   ahh["boo"] = "poo";
-}
+};

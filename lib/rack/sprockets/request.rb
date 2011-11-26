@@ -28,7 +28,7 @@ module Rack::Sprockets
     end
 
     def validate!
-      raise NotSprocketsRequest if !valid?
+      raise NotSprocketsRequest, "this request is not for sprockets media" if !valid?
     end
 
     # Determine if the request is valid.  This will be called on every request

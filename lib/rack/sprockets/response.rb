@@ -34,6 +34,8 @@ module Rack::Sprockets
           # Return a 200 with the asset contents
           set_ok
         end
+      rescue SprocketsAssetNotFound
+        raise
       rescue Exception => e
         case @config.sprockets.content_type_of(@request.asset_path)
         when "application/javascript"
@@ -53,10 +55,13 @@ module Rack::Sprockets
     # * returns nil if no asset is found
     # * raises exceptions if errors compiling asset
     def asset
-      @asset ||= @config.sprockets.find_asset(@request.asset_path, :bundle => !query_body_only?)
+      @asset ||= find_asset
     end
 
     def to_rack
+      if self.status.nil?
+        raise NoResponseStatus, "no response status code.  has #set! method been called?"
+      end
       [self.status, self.headers, [self.body]]
     end
 
@@ -72,7 +77,7 @@ module Rack::Sprockets
       self.status = 200
 
       err = "#{exception.class.name}: #{exception.message}"
-      self.body = "throw Error(#{err.inspect})"
+      self.body = "throw Error(#{err.inspect});"
 
       self.headers["Content-Type"]   = "application/javascript"
       self.headers["Content-Length"] = body_content_length.to_s
@@ -156,6 +161,17 @@ module Rack::Sprockets
     end
 
     private
+
+    def find_asset
+      @config.sprockets.find_asset(@request.asset_path, {
+        :bundle => !query_body_only?
+      }).tap { |asset| raise_asset_not_found(@request.asset_path) if asset.nil? }
+    end
+
+    def raise_asset_not_found(asset_path)
+      raise SprocketsAssetNotFound, "no asset '#{@request.asset_path}'"
+    end
+
 
     def asset_content_type
       self.asset.content_type

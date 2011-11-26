@@ -204,7 +204,7 @@ module Rack::Sprockets
       end
 
       def for_media_type?(media_type_list)
-        (self.media_types & (media_type_list || [])).size > 0
+        (self.media_types & ([*media_type_list] || [])).size > 0
       end
       alias_method :accept?, :for_media_type?
 

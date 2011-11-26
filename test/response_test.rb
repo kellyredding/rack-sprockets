@@ -47,10 +47,6 @@ module Rack::Sprockets
       assert_equal "", subject.body
     end
 
-    should "return a rack response tuple" do
-      assert_equal [subject.status, subject.headers, [subject.body]], subject.to_rack
-    end
-
     should "know its sprockets asset" do
       req = sprockets_request(@base.config, "GET", "/javascripts/alert_one.js")
       res = sprockets_response(@base.config, req)
@@ -64,7 +60,7 @@ module Rack::Sprockets
 
       req = sprockets_request(@base.config, "GET", "/javascripts/does_not_exist.js")
       res = sprockets_response(@base.config, req)
-      assert_not res.asset
+      assert_raises(SprocketsAssetNotFound) { res.asset }
     end
 
     should "complain if trying to build an asset that has compile errors" do
@@ -159,11 +155,10 @@ module Rack::Sprockets
     desc "when ok"
     setup do
       subject.send :set_ok
-      puts subject.body.inspect
     end
 
     should "set the status code to 200 and return asset source in body" do
-      assert_equal 201, subject.status
+      assert_equal 200, subject.status
       assert_match /^var one_message/, subject.body
       assert_equal "application/javascript", subject.headers["Content-Type"]
       assert_equal Rack::Utils.bytesize(subject.body).to_s, subject.headers["Content-Length"]
@@ -175,6 +170,25 @@ module Rack::Sprockets
 
       assert_nothing_raised { res.set! }
       assert_match /^var one_message/, subject.body
+    end
+
+  end
+
+  class ToRackTests < ResponseTests
+    desc "when returning its rack response tuple"
+    setup do
+      subject.status = nil
+    end
+
+    should "complain if no status has been set" do
+      assert_raises NoResponseStatus do
+        subject.to_rack
+      end
+    end
+
+    should "return an appropriate Rack tuple" do
+      subject.send :set_ok
+      assert_equal [200, subject.headers, [subject.body]], subject.to_rack
     end
 
   end

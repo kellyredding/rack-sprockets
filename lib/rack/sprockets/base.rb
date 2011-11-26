@@ -1,16 +1,22 @@
-require 'rack/sprockets/options'
+require 'rack/sprockets/config'
 require 'rack/sprockets/request'
 require 'rack/sprockets/response'
 
 module Rack::Sprockets
   class Base
-    include Rack::Sprockets::Options
+    include Rack::Sprockets::Config
 
-    def initialize(app, options={})
+    # Store off the app reference and apply any configs
+    def initialize(app, configs={})
       @app = app
-      initialize_options options
-      yield self if block_given?
-      validate_options
+
+      # setup and validate the configs
+      self.config.apply(configs)
+      yield self.config if block_given?
+      validate_config!
+
+      # build the configured sprockets environment
+      self.config.sprockets = configured_sprockets_env
     end
 
     # The Rack call interface. The receiver acts as a prototype and runs
@@ -25,33 +31,25 @@ module Rack::Sprockets
     end
 
     # The real Rack call interface.
-    # if Sprockets JS is being requested, this is an endpoint:
-    # => generate the compiled javascripts
-    # => respond appropriately
-    # Otherwise, call on up to the app as normal
+    # if a Sprockets resource is being requested and is found, this is an endpoint:
+    # otherwise, call on up to the app as normal
     def call!(env)
-      @default_options.each { |k,v| env[k] ||= v }
-      @env = env
-      
-      if (@request = Request.new(@env.dup.freeze)).for_sprockets?
-        Response.new(@env.dup.freeze, @request.source.to_js).to_rack
-      else
+      begin
+        request = Request.new(self.config, env.dup.freeze)
+        request.validate!
+        response = Response.new(self.config, env.dup.freeze, request)
+        response.set!
+      rescue NotSprocketsRequest, SprocketsAssetNotFound => err
+        # call up middleware stack - this is not a sprockets request
         @app.call(env)
-      end
-    end
-    
-    private
-    
-    def validate_options
-      # ensure a root path is specified and does exists
-      unless options.has_key?(option_name(:root)) and !options(:root).nil?
-        raise(ArgumentError, "no :root option set")
-      end
-      set :root, File.expand_path(options(:root))
+      else
+        # Mark session as "skipped" so no `Set-Cookie` header is set
+        env['rack.session.options'] ||= {}
+        env['rack.session.options'][:defer] = true
+        env['rack.session.options'][:skip] = true
 
-      # ensure a source path is specified and does exists
-      unless options.has_key?(option_name(:source)) and !options(:source).nil?
-        raise(ArgumentError, "no :source option set")
+        # return the rack response tuple
+        response.to_rack
       end
     end
 

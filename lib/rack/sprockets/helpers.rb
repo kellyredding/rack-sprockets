@@ -2,6 +2,7 @@ module Rack::Sprockets
 
   class NotSprocketsRequest < RuntimeError; end
   class SprocketsAssetNotFound < RuntimeError; end
+  class NoResponseStatus < RuntimeError; end
 
   module Helpers
 

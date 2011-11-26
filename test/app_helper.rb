@@ -3,6 +3,8 @@ require 'assert'
 require 'rack/test'
 require 'webrat'
 
+require 'rack/sprockets'
+
 class Assert::Context
   include Rack::Test::Methods
   include Webrat::Methods
@@ -10,18 +12,6 @@ class Assert::Context
 
   Webrat.configure do |config|
     config.mode = :rack
-  end
-
-  class << self
-
-    def should_respond_with_compiled_js
-      should "return compiled js" do
-        assert_equal 200, @response.status, "status is not '#{Rack::Utils::HTTP_STATUS_CODES[200]}'"
-        assert @response.headers["Content-Type"].include?(Rack::Sprockets::MIME_TYPE), "content type is not '#{Rack::Sprockets::MIME_TYPE}'"
-        assert_equal @compiled.strip, @response.body.strip, "the compiled js is incorrect"
-      end
-    end
-
   end
 
 end

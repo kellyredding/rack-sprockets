@@ -23,15 +23,4 @@ class Assert::Context
     Rack::Sprockets::Response.new(config, request ? request.env : {}, request)
   end
 
-
-
-
-  # TODO: still needed?
-
-  def env_defaults
-    Rack::Sprockets::Base.defaults.merge({
-      Rack::Sprockets::Base.option_name(:root) => file_path('test','fixtures','sinatra')
-    })
-  end
-
 end
