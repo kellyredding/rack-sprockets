@@ -1,4 +1,5 @@
 require 'rack/sprockets/helpers'
+require 'rack/utils'
 
 module Rack::Sprockets
 
@@ -23,24 +24,24 @@ module Rack::Sprockets
       @body = ""
     end
 
-    def validate!
+    def set!
       begin
         # Check request headers `HTTP_IF_NONE_MATCH` against the asset digest
         if etag_match?
           # Return a 304 Not Modified
-          build_not_modified_response
+          set_not_modified
         else
           # Return a 200 with the asset contents
-          build_ok_response
+          set_ok
         end
       rescue Exception => e
         case @config.sprockets.content_type_of(@request.asset_path)
         when "application/javascript"
           # Re-throw JavaScript asset exceptions to the browser
-          build_js_exception_response(e)
+          set_js_exception(e)
         when "text/css"
           # Display CSS asset exceptions in the browser
-          build_css_exception_response(e)
+          set_css_exception(e)
         else
           # re-raise on up
           raise
@@ -62,42 +63,95 @@ module Rack::Sprockets
     protected
 
     # a 304 Not Modified response
-    def build_not_modified_response
+    def set_not_modified
       self.status = 304
     end
 
-    # a 200 OK response
-    def build_ok_response
-      self.status = 200
-      self.body = self.asset
-      set_headers!
-    end
-
     # throw JavaScript exception to the browser
-    def build_js_exception_response(exception)
+    def set_js_exception(exception)
+      self.status = 200
+
+      err = "#{exception.class.name}: #{exception.message}"
+      self.body = "throw Error(#{err.inspect})"
+
+      self.headers["Content-Type"]   = "application/javascript"
+      self.headers["Content-Length"] = body_content_length.to_s
     end
 
     # show CSS exception in the browser
-    def build_css_exception_response(exception)
+    def set_css_exception(exception)
+      self.status = 200
+
+      err = "\n#{exception.class.name}: #{exception.message}"
+      backtrace = "\n  #{exception.backtrace.first}"
+      self.body = <<-CSS
+        html {
+          padding: 18px 36px;
+        }
+
+        head {
+          display: block;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        body > * {
+          display: none !important;
+        }
+
+        head:after, body:before, body:after {
+          display: block !important;
+        }
+
+        head:after {
+          font-family: sans-serif;
+          font-size: large;
+          font-weight: bold;
+          content: "Error compiling CSS asset";
+        }
+
+        body:before, body:after {
+          font-family: monospace;
+          white-space: pre-wrap;
+        }
+
+        body:before {
+          font-weight: bold;
+          content: "#{escape_css_content(err)}";
+        }
+
+        body:after {
+          content: "#{escape_css_content(backtrace)}";
+        }
+      CSS
+
+      self.headers["Content-Type"]   = "text/css;charset=utf-8"
+      self.headers["Content-Length"] = body_content_length.to_s
     end
 
-    def set_headers!
-      # Set content type and length headers
-      headers["Content-Type"]   = asset_content_type
-      headers["Content-Length"] = body_content_length.to_s
+    # a 200 OK response
+    def set_ok
+      self.status = 200
 
-      # Set caching headers
-      headers["Cache-Control"]  = "public"
-      headers["Last-Modified"]  = asset_mtime_httpdate
-      headers["ETag"]           = asset_etag
+      self.body = self.asset.source
+
+      self.headers["Content-Type"]   = asset_content_type
+      self.headers["Content-Length"] = body_content_length.to_s
+
+      self.headers["Cache-Control"]  = "public"
+      self.headers["Last-Modified"]  = asset_mtime_httpdate
+      self.headers["ETag"]           = asset_etag
 
       if path_info_fingerprint
         # If the request url contains a fingerprint, set a long
         # expires on the response
-        headers["Cache-Control"] << ", max-age=31536000"
+        self.headers["Cache-Control"] << ", max-age=31536000"
       else
         # Otherwise set `must-revalidate` since the asset could be modified.
-        headers["Cache-Control"] << ", must-revalidate"
+        self.headers["Cache-Control"] << ", must-revalidate"
       end
     end
 
@@ -109,7 +163,16 @@ module Rack::Sprockets
 
     # Calculate appropriate content_length
     def body_content_length
-      self.body.respond_to?(:bytesize) ? self.body.bytesize : self.body.size
+      Rack::Utils.bytesize(self.body)
+    end
+
+    # Escape special characters for use inside a CSS content("...") string
+    def escape_css_content(content)
+      content.
+        gsub('\\', '\\\\005c ').
+        gsub("\n", '\\\\000a ').
+        gsub('"',  '\\\\0022 ').
+        gsub('/',  '\\\\002f ')
     end
 
     # Compare the requests `HTTP_IF_MODIFIED_SINCE` against the
