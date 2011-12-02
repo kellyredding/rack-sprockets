@@ -4,19 +4,15 @@ require 'rack/sprockets/response'
 
 module Rack::Sprockets
   class Base
-    include Rack::Sprockets::Config
 
     # Store off the app reference and apply any configs
     def initialize(app, configs={})
       @app = app
 
       # setup and validate the configs
-      self.config.apply(configs)
-      yield self.config if block_given?
-      validate_config!
-
-      # build the configured sprockets environment
-      self.config.sprockets = configured_sprockets_env
+      @config = Rack::Sprockets::Config.new(configs || {})
+      yield @config if block_given?
+      @config.validate!
     end
 
     # The Rack call interface. The receiver acts as a prototype and runs
@@ -35,9 +31,9 @@ module Rack::Sprockets
     # otherwise, call on up to the app as normal
     def call!(env)
       begin
-        request = Request.new(self.config, env.dup.freeze)
+        request = Request.new(@config, env.dup.freeze)
         request.validate!
-        response = Response.new(self.config, env.dup.freeze, request)
+        response = Response.new(@config, env.dup.freeze, request)
         response.set!
       rescue NotSprocketsRequest, SprocketsAssetNotFound => err
         # call up middleware stack - this is not a sprockets request

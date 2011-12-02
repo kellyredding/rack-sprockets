@@ -37,7 +37,7 @@ module Rack::Sprockets
       rescue SprocketsAssetNotFound
         raise
       rescue Exception => e
-        case @config.sprockets.content_type_of(@request.asset_path)
+        case @config.sprockets_env.content_type_of(@request.asset_path)
         when "application/javascript"
           # Re-throw JavaScript asset exceptions to the browser
           set_js_exception(e)
@@ -163,7 +163,7 @@ module Rack::Sprockets
     private
 
     def find_asset
-      @config.sprockets.find_asset(@request.asset_path, {
+      @config.sprockets_env.find_asset(@request.asset_path, {
         :bundle => !query_body_only?
       }).tap { |asset| raise_asset_not_found(@request.asset_path) if asset.nil? }
     end

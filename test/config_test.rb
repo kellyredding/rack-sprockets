@@ -1,73 +1,53 @@
 require 'assert'
-
-require 'rack/sprockets/config'
+require 'ns-options/assert_macros'
 require 'test/fixtures/mock_base'
 
-module Rack::Sprockets::Config
+require 'rack/sprockets/config'
+
+class Rack::Sprockets::Config
 
   class BaseTests < Assert::Context
+    include NsOptions::AssertMacros
+
     desc 'Rack::Sprockets::Config'
     setup do
-      @base = MockBase.new
-      @config = @base.config
+      @config = Rack::Sprockets::Config.new
     end
+    subject { @config }
 
-    should "default the root to '.'" do
-      assert_kind_of Pathname, @config.root
-      assert_equal Pathname.new("."), @config.root
-    end
+    should have_option :root,           Pathname,  :default => '.'
+    should have_option :hosted_at,      HostedAt,  :default => '/'
+    should have_option :cache,          Cache,     {
+      :default => false,
+      :args => Rack::Sprockets::Config
+    }
+    should have_option :mime_types,     MimeTypes, :default => [
+      ['application/javascript', '.js'],
+      ['text/css', '.css']
+    ]
+    should have_option :public,         :default => 'public'
+    should have_option :load_path,      :default => []
 
-    should "default the hosted at to '/'" do
-      assert_kind_of HostedAtConfig, @config.hosted_at
-      assert_equal HostedAtConfig.new("/"), @config.hosted_at
-    end
+    should have_option :digest_class,   :default => nil
+    should have_option :version,        :default => nil
+    should have_option :logger,         :default => nil
 
-    should "default the cache to false" do
-      assert_kind_of CacheConfig, @config.cache
-      assert_equal CacheConfig.new(false, @config), @config.cache
-    end
-
-    should "default the mime types to js and css" do
-      assert_kind_of MimeTypesConfig, @config.mime_types
-      assert_equal(MimeTypesConfig.new([
-        ['application/javascript', '.js'],
-        ['text/css', '.css']
-      ]), @config.mime_types)
-    end
-
-    should "default the public location to 'public'" do
-      assert_equal 'public', @config.public
-    end
-
-    should "default the load path to be empty" do
-      assert_equal [], @config.load_path
-    end
-
-    should "default the pass-thru Sprockets configs" do
-      {
-        :digest_class => nil,
-        :version => nil,
-        :logger => nil,
-        :js_compressor => nil,
-        :css_compressor => nil
-      }.each do |k,v|
-        assert_equal v, @config.send(k)
-      end
-    end
+    should have_option :js_compressor,  :default => nil
+    should have_option :css_compressor, :default => nil
 
   end
 
 
 
   class ValidateTests < BaseTests
-    desc "when validated"
+    desc "validated"
     setup { @config.load_path = ["app"] }
 
     def assert_validation(error=nil)
       if error
-        assert_raises(error)  { @base.send :validate_config! }
+        assert_raises(error)  { subject.send :validate! }
       else
-        assert_nothing_raised { @base.send :validate_config! }
+        assert_nothing_raised { subject.send :validate! }
       end
     end
 
@@ -96,11 +76,11 @@ module Rack::Sprockets::Config
 
 
   class HostedAtConfigTests < BaseTests
-    desc 'HostedAtConfig'
+    desc 'HostedAt config'
     subject { @config.hosted_at }
 
     should "be a HostedAtConfig obj" do
-      assert_kind_of HostedAtConfig, subject
+      assert_kind_of HostedAt, subject
     end
 
     should "config the default '/' value" do
@@ -124,13 +104,13 @@ module Rack::Sprockets::Config
 
 
   class CacheConfigTests < BaseTests
-    desc "CacheConfig"
+    desc "Cache config"
     subject { @config.cache }
 
     should have_reader :store
 
     should "be a CacheConfig obj" do
-      assert_kind_of CacheConfig, subject
+      assert_kind_of Cache, subject
     end
 
     should "have no store if false" do
@@ -178,7 +158,7 @@ module Rack::Sprockets::Config
 
 
   class MimeTypesConfigTests < BaseTests
-    desc "MimeTypesConfig"
+    desc "MimeTypes config"
     setup do
       @custom_types = [['some/format', '.some'], ['another/format', '.another']]
       @config.mime_types = @custom_types
@@ -220,27 +200,27 @@ module Rack::Sprockets::Config
   class SprocketsEnvTests < BaseTests
     desc "Sprockets env"
     setup do
-      @base = MockBase.new({
+      @config = Rack::Sprockets::Config.new({
         :load_path => ["app", "lib"],
         :cache => "/tmp",
         :version => "1.0"
       })
     end
-    subject { @base.config.sprockets }
+    subject { @config.sprockets_env }
 
     should "have the load_path applied" do
-      @base.config.load_path.each do |path|
-        exp_path = File.expand_path("./#{path}", @base.config.root)
+      @config.load_path.each do |path|
+        exp_path = File.expand_path("./#{path}", @config.root)
         assert_included exp_path, subject.paths
       end
     end
 
     should "have the cache config applied" do
-      assert_equal @base.config.cache, subject.cache
+      assert_equal @config.cache, subject.cache
     end
 
     should "have any passthru configs applied" do
-      @base.send(:passthru_configs).each do |k,v|
+      @config.send(:passthru_configs).each do |k,v|
         assert_equal v, subject.send(k)
       end
     end
