@@ -26,5 +26,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency("yui-compressor", ["~> 0.9.0"])
 
   s.add_dependency("rack", ["~> 1.0"])
-  s.add_dependency("sprockets", ["~> 1.0"])
+  s.add_dependency("sprockets", ["~> 2.0"])
+  s.add_dependency("ns-options", ["~> 0.3.1"])
 end
